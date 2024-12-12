@@ -1,8 +1,13 @@
 from jose import jwt
 from datetime import datetime, timedelta, timezone
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
-SECRET_KEY = 's3cr3t_k3y_sh0uld_b3_g00d_and_r@nd0m'
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError('SECRET_KEY does not exists')
 
 
 def create_token(data) -> dict:
