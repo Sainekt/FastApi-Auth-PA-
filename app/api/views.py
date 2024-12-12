@@ -1,10 +1,10 @@
 from fastapi import APIRouter, status, Header, HTTPException
 from fastapi.responses import JSONResponse
-from app.db import USERS, TOKENS
+from app.db import USERS
+from jose.exceptions import JWTError
 from .validators import (
     LoginValidate,
     RefreshValidate,
-    expire_validate,
     check_token
 )
 from .utils import create_token
@@ -20,13 +20,19 @@ async def index(Authorization: str = Header(None)):
             detail="Not authenticated"
         )
     token = Authorization.split()[1]
-    if not check_token(token):
+    try:
+        if not check_token(token):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='Incorrect token'
+            )
+    except JWTError:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail='Incorrect token'
+            detail='Incorrect token',
+            status_code=status.HTTP_401_UNAUTHORIZED
         )
 
-    return {'data': 'Какая-то супер секретная инфа...'}
+    return {'data': 'some top secret information'}
 
 
 @router.post('/login')
@@ -40,11 +46,9 @@ async def login(request_user: LoginValidate):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail='Incorrect password')
-    create_token(username)
+    tokens = create_token(username)
     return JSONResponse(
-        content={
-            'token': TOKENS[username]['token'],
-            'refresh': TOKENS[username]['refresh']},
+        content=tokens,
         status_code=status.HTTP_201_CREATED
     )
 
@@ -53,26 +57,24 @@ async def login(request_user: LoginValidate):
 async def refresh(request_refresh: RefreshValidate):
     username = request_refresh.username
     token = request_refresh.refresh_token
-
-    if not (tokens := TOKENS.get(username)):
+    if not USERS.get(username):
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='User not found'
+            detail='User not found',
+            status_code=status.HTTP_404_NOT_FOUND
         )
-    if token != tokens['refresh']:
+    try:
+        if not check_token(token=token, refresh=True):
+            raise HTTPException(
+                detail='Incorrect token',
+                status_code=status.HTTP_401_UNAUTHORIZED
+            )
+    except JWTError:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Incorrect refresh token'
+            detail='Incorrect token',
+            status_code=status.HTTP_401_UNAUTHORIZED
         )
-    if not expire_validate(tokens['expire_refresh']):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Refresh token expired'
-        )
-    create_token(username)
+    tokens = create_token(username)
     return JSONResponse(
-        content={
-            'token': TOKENS[username]['token'],
-            'refresh': TOKENS[username]['refresh']},
+        content=tokens,
         status_code=status.HTTP_201_CREATED
     )

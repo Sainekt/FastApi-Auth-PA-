@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime, timezone
-from app.db import TOKENS
+from .utils import decoding_token
+from dateutil import parser
 
 
 class LoginValidate(BaseModel):
@@ -14,14 +15,12 @@ class RefreshValidate(BaseModel):
 
 
 def expire_validate(time):
+    time = parser.parse(time)
     if time > datetime.now(timezone.utc):
         return True
     return False
 
 
-def check_token(token):
-    tokens = TOKENS.values()
-    for token_in_db in tokens:
-        if token_in_db['token'] == token:
-            return expire_validate(token_in_db['expire'])
-    return False
+def check_token(token, refresh=False):
+    decode_token = decoding_token(token, refresh)
+    return expire_validate(decode_token['expire'])

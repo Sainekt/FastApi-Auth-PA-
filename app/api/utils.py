@@ -1,26 +1,28 @@
 from jose import jwt
 from datetime import datetime, timedelta, timezone
-from app.db import TOKENS, USERS
 
 
-def create_token(data):
-    # todo move to .env secret
-    to_decode = USERS[data].copy()
+SECRET_KEY = 's3cr3t_k3y_sh0uld_b3_g00d_and_r@nd0m'
+
+
+def create_token(data) -> dict:
+    to_decode = {'data': data}
     expire_token = datetime.now(timezone.utc) + timedelta(minutes=15)
     to_decode.update({'expire': expire_token.isoformat()})
-    secret = 's3cr3t_k3y_sh0uld_b3_g00d_and_r@nd0m'
-    token = jwt.encode(to_decode, secret)
-    refresh_token, expire_refresh_token = get_refresh_token(to_decode, secret)
-    tokens = {
-        'token': token,
-        'expire': expire_token,
-        'refresh': refresh_token,
-        'expire_refresh': expire_refresh_token}
-    TOKENS[data] = tokens
+    token = jwt.encode(to_decode, SECRET_KEY)
+    refresh_token = get_refresh_token(to_decode)
+    return {'token': token, 'refresh': refresh_token}
 
 
-def get_refresh_token(data, secret):
+def get_refresh_token(data) -> dict:
     expire_token = datetime.now(timezone.utc) + timedelta(days=30)
-    new_secret = secret + 'refresh'
+    data['expire'] = expire_token.isoformat()
+    new_secret = SECRET_KEY + 'refresh'
     token = jwt.encode(data, new_secret)
-    return token, expire_token
+    return token
+
+
+def decoding_token(token, refresh=False) -> dict:
+    if refresh:
+        return jwt.decode(token, SECRET_KEY + 'refresh')
+    return jwt.decode(token, SECRET_KEY)
