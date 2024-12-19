@@ -1,8 +1,9 @@
-from fastapi import FastAPI
-from .api.views import router
 from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 import sys
+from fastapi import FastAPI
+from app.api.views import router
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(str(BASE_DIR))
