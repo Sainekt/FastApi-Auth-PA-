@@ -21,7 +21,8 @@ async def index(Authorization: str = Header(None)):
         )
     token = Authorization.split()[1]
     try:
-        if not check_token(token):
+        token_ckeck, time = check_token(token)
+        if not token_ckeck:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail='Incorrect token'
@@ -31,8 +32,9 @@ async def index(Authorization: str = Header(None)):
             detail='Incorrect token',
             status_code=status.HTTP_401_UNAUTHORIZED
         )
-
-    return {'data': 'some top secret information'}
+    return {'data': 'some top secret information',
+            'time': time,
+            }
 
 
 @router.post('/login')
