@@ -1,8 +1,11 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '../../context/AuthContext';
 import Api from '../../api';
+
 export default function Login() {
+    const {setAuth} = useAuth()
     const [error, setError] = useState('');
     const router = useRouter()
 
@@ -16,6 +19,7 @@ export default function Login() {
                 if (data.token) {
                     localStorage.setItem('token', data.token);
                     router.push('/')
+                    setAuth(true)
                 } else {
                     setError(data.detail);
                 }

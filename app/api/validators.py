@@ -17,8 +17,8 @@ class RefreshValidate(BaseModel):
 def expire_validate(time):
     time = parser.parse(time)
     if time > datetime.now(timezone.utc):
-        return True
-    return False
+        return True, time
+    return False, False
 
 
 def check_token(token, refresh=False):

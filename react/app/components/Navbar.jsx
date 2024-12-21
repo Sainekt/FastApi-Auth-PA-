@@ -1,13 +1,27 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
-import LogOut from './LogOut';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../context/AuthContext';
+
 export default function Navbar() {
-    const [token, setToken] = useState(() => localStorage.getItem('token'));
+    const { auth, setAuth } = useAuth();
+    const router = useRouter();
 
     function handleLogOut() {
         localStorage.removeItem('token');
-        setToken(null);
+        setAuth(false);
+        router.push('/login');
+    }
+
+    function handleClickLink(event) {
+        event.preventDefault();
+        if (
+            event.target.href === window.location.href ||
+            (event.target.text === 'Home' && auth === false)
+        ) {
+            return;
+        }
+        router.push(event.target.href);
     }
 
     return (
@@ -19,23 +33,32 @@ export default function Navbar() {
                 >
                     <ul className='navbar-nav me-auto mb-2 mb-lg-0'>
                         <li className='nav-item'>
-                            <Link className={'nav-link'} href={'/'}>
+                            <Link
+                                className={'nav-link'}
+                                href={'/'}
+                                onClick={handleClickLink}
+                            >
                                 Home
                             </Link>
                         </li>
                         <li className='nav-item'>
-                            <Link className={'nav-link'} href={'/login'}>
+                            <Link
+                                className={'nav-link'}
+                                href={'/login'}
+                                onClick={handleClickLink}
+                            >
                                 Login
                             </Link>
                         </li>
-                        <li className='nav-item'>
-                            <Link className={'nav-link'} href={'/refresh'}>
-                                Refresh
-                            </Link>
-                        </li>
                         <li>
-                            {token ? (
-                                <LogOut handleLogOut={handleLogOut} />
+                            {auth ? (
+                                <Link
+                                    className={'nav-link'}
+                                    href={'/login'}
+                                    onClick={handleLogOut}
+                                >
+                                    Logout
+                                </Link>
                             ) : null}
                         </li>
                     </ul>

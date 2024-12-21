@@ -5,10 +5,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import donePic from '../public/done.png';
 import Api from './api/index';
+import { useAuth } from './context/AuthContext';
 
 export default function Index() {
+    const { auth, setAuth } = useAuth();
     const [data, setData] = useState({});
-    const [auth, setAuth] = useState(false);
+    const [countdown, setCountdown] = useState(0);
     const [error, setError] = useState(null);
     const token = localStorage.getItem('token');
     const router = useRouter();
@@ -18,21 +20,43 @@ export default function Index() {
             .then((data) => {
                 if (data.data) {
                     setAuth(true);
-                    setData(data.data);
+                    setData(data);
                     setError(null);
+                    const endTime = new Date(data.time).getTime();
+                    const currentTime = Date.now();
+                    const differenceInSeconds = Math.floor(
+                        (endTime - currentTime) / 1000
+                    );
+                    setCountdown(
+                        differenceInSeconds > 0 ? differenceInSeconds : 0
+                    );
                 } else {
                     setAuth(false);
                     setError(data.detail);
                 }
             })
             .catch((error) => {
-                setError(data.detail);
+                setError(error.detail);
             });
 
         if (!token) {
             router.push('/login');
         }
-    }, [auth]);
+    }, []);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCountdown((prevCountdown) => {
+                if (prevCountdown <= 0) {
+                    clearInterval(interval);
+                    return 0;
+                }
+                return prevCountdown - 1; // Уменьшаем на 1 каждую секунду
+            });
+        }, 1000);
+
+        return () => clearInterval(interval); // Очищаем интервал при размонтировании компонента
+    }, []);
 
     return (
         <>
@@ -48,14 +72,20 @@ export default function Index() {
                         <br />
                         <h2>
                             Data from backend:{' '}
-                            <span className='text-danger'>{data}</span>
+                            <span className='text-danger'>{data.data}</span>
                         </h2>
+                        <h3>
+                            You will need to update the token after: {countdown}{' '}
+                            seconds
+                        </h3>
                         <Image src={donePic} alt='done' />
                     </div>
                 ) : (
-                    <h1>
-                        <Link href={'/login'}>Please Login...</Link>
-                    </h1>
+                    <div className='d-flex justify-content-center'>
+                        <div className='spinner-border' role='status'>
+                            <span className='visually-hidden'>Loading...</span>
+                        </div>
+                    </div>
                 )}
             </div>
         </>
