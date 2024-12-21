@@ -51,11 +51,11 @@ export default function Index() {
                     clearInterval(interval);
                     return 0;
                 }
-                return prevCountdown - 1; // Уменьшаем на 1 каждую секунду
+                return prevCountdown - 1;
             });
         }, 1000);
 
-        return () => clearInterval(interval); // Очищаем интервал при размонтировании компонента
+        return () => clearInterval(interval);
     }, []);
 
     return (
