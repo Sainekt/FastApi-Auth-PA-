@@ -78,7 +78,7 @@ export default function Index() {
                             You will need to update the token after: {countdown}{' '}
                             seconds
                         </h3>
-                        <Image src={donePic} alt='done' />
+                        <Image src={donePic} alt='done' priority={true} />
                     </div>
                 ) : (
                     <div className='d-flex justify-content-center'>
