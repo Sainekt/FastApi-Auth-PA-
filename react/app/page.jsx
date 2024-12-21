@@ -66,7 +66,7 @@ export default function Index() {
                 </div>
             ) : null}
             <div className='d-flex justify-content-center'>
-                {auth ? (
+                {auth && data.data ? (
                     <div>
                         <h1>Okay, what's next?</h1>
                         <br />
